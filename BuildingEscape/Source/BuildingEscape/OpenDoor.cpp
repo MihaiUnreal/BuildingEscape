@@ -1,6 +1,8 @@
 // Copyright @ Mihai Bairac
 
 #include "OpenDoor.h"
+#include "Engine/World.h"
+#include <assert.h>
 
 // Sets default values for this component's properties
 UOpenDoor::UOpenDoor()
@@ -17,11 +19,19 @@ UOpenDoor::UOpenDoor()
 void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
+
+	if (ActorThatOpens)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ActorThatOpens name: %s"), *(ActorThatOpens->GetName()));
+	}
 }
 
 void UOpenDoor::OpenDoor()
 {
 	AActor* Owner = GetOwner();
+	assert(Owner != nullptr);
 
 	// get owner
 	FString ObjectName = Owner->GetName();
@@ -47,7 +57,7 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	
 	// Poll the TriggerVolume
 	// if the ActorThatOpens is in the volume
-	if (PressurePlate && PressurePlate->IsOverlappingActor(ActorThatOpens))
+	if (ActorThatOpens && PressurePlate && PressurePlate->IsOverlappingActor(ActorThatOpens))
 	{
 		OpenDoor();
 	}
