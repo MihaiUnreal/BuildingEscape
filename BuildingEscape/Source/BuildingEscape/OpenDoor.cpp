@@ -20,6 +20,7 @@ void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
 
+	Owner = GetOwner();
 	ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
 
 	if (ActorThatOpens)
@@ -30,24 +31,27 @@ void UOpenDoor::BeginPlay()
 
 void UOpenDoor::OpenDoor()
 {
-	AActor* Owner = GetOwner();
 	assert(Owner != nullptr);
-
-	// get owner
-	FString ObjectName = Owner->GetName();
-
-	// create rotator
-	FRotator NewRotation(0.0f, -60.0f, 0.0f); // yaw 60 degrees
-
-											  // set rotation
-	Owner->SetActorRotation(NewRotation);
+										 
+	Owner->SetActorRotation(FRotator(0.0f, OpenAngle, 0.0f));
 
 	// log stuff
+	FString ObjectName = Owner->GetName();
 	FString ObjectRotation = Owner->GetActorRotation().ToString();
-	Owner->GetActorRotation().Yaw;
 	UE_LOG(LogTemp, Warning, TEXT("%s is rotated %s degrees!"), *ObjectName, *ObjectRotation);
 }
 
+void UOpenDoor::CloseDoor()
+{
+	assert(Owner != nullptr);
+
+	Owner->SetActorRotation(FRotator(0.0f, 180.0f, 0.0f));
+
+	// log stuff
+	FString ObjectName = Owner->GetName();
+	FString ObjectRotation = Owner->GetActorRotation().ToString();
+	UE_LOG(LogTemp, Warning, TEXT("%s is rotated %s degrees!"), *ObjectName, *ObjectRotation);
+}
 
 // Called every frame
 void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -60,6 +64,16 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	if (ActorThatOpens && PressurePlate && PressurePlate->IsOverlappingActor(ActorThatOpens))
 	{
 		OpenDoor();
+
+		LastDoorOpenTime = GetWorld()->GetTimeSeconds();
+	}
+
+	// check if the door needs to close
+	if (LastDoorOpenTime > 0.0f && (GetWorld()->GetTimeSeconds() - LastDoorOpenTime) >= DoorCloseDelay)
+	{
+		CloseDoor();
+
+		LastDoorOpenTime = 0.0f;
 	}
 }
 
