@@ -38,7 +38,7 @@ void UOpenDoor::OpenDoor()
 	// log stuff
 	FString ObjectName = Owner->GetName();
 	FString ObjectRotation = Owner->GetActorRotation().ToString();
-	UE_LOG(LogTemp, Warning, TEXT("%s is rotated %s degrees!"), *ObjectName, *ObjectRotation);
+	//UE_LOG(LogTemp, Warning, TEXT("%s is rotated %s degrees!"), *ObjectName, *ObjectRotation);
 }
 
 void UOpenDoor::CloseDoor()
@@ -50,7 +50,7 @@ void UOpenDoor::CloseDoor()
 	// log stuff
 	FString ObjectName = Owner->GetName();
 	FString ObjectRotation = Owner->GetActorRotation().ToString();
-	UE_LOG(LogTemp, Warning, TEXT("%s is rotated %s degrees!"), *ObjectName, *ObjectRotation);
+	//UE_LOG(LogTemp, Warning, TEXT("%s is rotated %s degrees!"), *ObjectName, *ObjectRotation);
 }
 
 // Called every frame
