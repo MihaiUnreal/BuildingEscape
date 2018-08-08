@@ -27,14 +27,19 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
-	// how far does the player reach for grabbable objects
-	float Reach = 200.0f;
 
 	UPhysicsHandleComponent* PhysicsHandleComponent = nullptr;
 
 	UInputComponent* InputComponent = nullptr;
 
-	FVector LineTraceEnd;
+	struct PlayerData
+	{
+		FVector ViewPointLocation;
+		FRotator ViewPointRotation;
+		FVector LineTraceEnd;
+		// how far does the player reach for grabbable objects
+		float Reach = 200.0f;
+	} PlayerData;
 
 	// Find (assumed) attached physics handle component
 	void FindPhysicsHandleComponent();
@@ -50,4 +55,8 @@ private:
 
 	// Return hit for frist physics body in reach
 	const FHitResult FindFirstPhysicsObjectInReach();
+
+	FHitResult LineTraceObjectInReach();
+
+	void ComputePlayerData();
 };
