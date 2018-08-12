@@ -41,8 +41,10 @@ private:
 
 	float LastDoorOpenTime = 0.0f;
 
-	//UPROPERTY(EditAnywhere)
-	AActor* ActorThatOpens; // the actor that triggers the door to open, usually the player
+	UPROPERTY(EditAnywhere)
+	float TriggerMass = 50.0f;
 
 	AActor* Owner; // the owning door
+
+	float GetTotalMassOfActorsOnPlate();
 };
