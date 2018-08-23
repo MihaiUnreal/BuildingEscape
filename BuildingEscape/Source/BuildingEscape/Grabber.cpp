@@ -4,6 +4,7 @@
 #include "Engine/World.h"
 #include "Components/PrimitiveComponent.h"
 #include "DrawDebugHelpers.h"
+#include <assert.h>
 
 #define OUT
 
@@ -29,9 +30,11 @@ void UGrabber::BeginPlay()
 /// Look for attached PhysicshandleComponent
 void UGrabber::FindPhysicsHandleComponent()
 {
+	assert(GetOwner() != nullptr);
+
 	PhysicsHandleComponent = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
 
-	if (PhysicsHandleComponent)
+	if (PhysicsHandleComponent == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Grabber of %s - missing physics handle component !"), *(GetOwner()->GetName()));
 	}
@@ -40,6 +43,8 @@ void UGrabber::FindPhysicsHandleComponent()
 /// Look for attached InputComponent (only appears at runtime)
 void UGrabber::SetupInputComponent()
 {
+	assert(GetOwner() != nullptr);
+
 	InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
 
 	if (InputComponent)
@@ -119,6 +124,9 @@ const FHitResult UGrabber::FindFirstPhysicsObjectInReach()
 
 FHitResult UGrabber::LineTraceObjectInReach()
 {
+	assert(GetWorld() != nullptr);
+	assert(GetOwner() != nullptr);
+
 	/// Setup query params
 	FCollisionQueryParams QueryParams(FName(TEXT("")), false, GetOwner());
 
@@ -143,6 +151,9 @@ FHitResult UGrabber::LineTraceObjectInReach()
 
 void UGrabber::ComputePlayerData()
 {
+	assert(GetWorld() != nullptr);
+	assert(GetWorld()->GetFirstPlayerController() != nullptr);
+
 	/// Get player view point this tick
 	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
 		OUT PlayerData.ViewPointLocation,

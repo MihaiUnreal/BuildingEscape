@@ -24,30 +24,11 @@ void UOpenDoor::BeginPlay()
 	Super::BeginPlay();
 
 	Owner = GetOwner();
-}
 
-void UOpenDoor::OpenDoor()
-{
-	assert(Owner != nullptr);
-										 
-	Owner->SetActorRotation(FRotator(0.0f, OpenAngle, 0.0f));
-
-	// log stuff
-	FString ObjectName = Owner->GetName();
-	FString ObjectRotation = Owner->GetActorRotation().ToString();
-	//UE_LOG(LogTemp, Warning, TEXT("%s is rotated %s degrees!"), *ObjectName, *ObjectRotation);
-}
-
-void UOpenDoor::CloseDoor()
-{
-	assert(Owner != nullptr);
-
-	Owner->SetActorRotation(FRotator(0.0f, 180.0f, 0.0f));
-
-	// log stuff
-	FString ObjectName = Owner->GetName();
-	FString ObjectRotation = Owner->GetActorRotation().ToString();
-	//UE_LOG(LogTemp, Warning, TEXT("%s is rotated %s degrees!"), *ObjectName, *ObjectRotation);
+	if (PressurePlate == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("OpenDoor of %s - missing PressurePlate component !"), *(GetOwner()->GetName()));
+	}
 }
 
 // Called every frame
@@ -59,18 +40,13 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	// Poll the TriggerVolume
 	if (GetTotalMassOfActorsOnPlate() > TriggerMass)
 	{
-		OpenDoor();
-
-		LastDoorOpenTime = GetWorld()->GetTimeSeconds();
+		OnOpen.Broadcast();
 	}
-
-	// check if the door needs to close
-	if (LastDoorOpenTime > 0.0f && (GetWorld()->GetTimeSeconds() - LastDoorOpenTime) >= DoorCloseDelay)
+	else
 	{
-		CloseDoor();
-
-		LastDoorOpenTime = 0.0f;
+		OnClose.Broadcast();
 	}
+
 }
 
 // Return total mass in Kg
