@@ -38,12 +38,25 @@ public:
 private:
 
 	UPROPERTY(EditAnywhere)
-	ATriggerVolume* PressurePlate = nullptr; // the trigger to open the door
+	ATriggerVolume* FirstPressurePlate = nullptr; // first trigger to open the door
 
 	UPROPERTY(EditAnywhere)
-	float TriggerMass = 50.0f;
+	ATriggerVolume* SecondPressurePlate = nullptr; // second trigger to open the door
+
+	UPROPERTY(EditAnywhere)
+	ATriggerVolume* ThirdPressurePlate = nullptr; // third trigger to open the door
+
+	UPROPERTY(EditAnywhere)
+	float FirstTriggerMass = 50.0f;
+
+	UPROPERTY(EditAnywhere)
+	float SecondTriggerMass = 50.0f;
+
+	UPROPERTY(EditAnywhere)
+	float ThirdTriggerMass = 50.0f;
 
 	AActor* Owner = nullptr; // the owning door
 
-	float GetTotalMassOfActorsOnPlate();
+	void TriggerDoor(bool Condition);
+	float GetTotalMassOfActorsOnPlate(const ATriggerVolume* PressurePlate);
 };
