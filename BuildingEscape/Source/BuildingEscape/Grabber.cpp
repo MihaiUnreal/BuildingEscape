@@ -2,9 +2,15 @@
 
 #include "Grabber.h"
 #include "Engine/World.h"
+#include "Sound/SoundCue.h"
 #include "Components/PrimitiveComponent.h"
-#include "DrawDebugHelpers.h"
+#include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
 #include <assert.h>
+
+//#define DEBUG_LINE
+#ifdef DEBUG_LINE
+#include "DrawDebugHelpers.h"
+#endif
 
 #define OUT
 
@@ -14,6 +20,9 @@ UGrabber::UGrabber()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
+
+	// Has to be called in constructor!
+	SetupGrabSound();
 }
 
 
@@ -32,9 +41,9 @@ void UGrabber::FindPhysicsHandleComponent()
 {
 	assert(GetOwner() != nullptr);
 
-	PhysicsHandleComponent = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
+	m_PhysicsHandleComponent = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
 
-	if (PhysicsHandleComponent == nullptr)
+	if (m_PhysicsHandleComponent == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Grabber of %s - missing physics handle component !"), *(GetOwner()->GetName()));
 	}
@@ -45,13 +54,13 @@ void UGrabber::SetupInputComponent()
 {
 	assert(GetOwner() != nullptr);
 
-	InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
+	m_InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
 
-	if (InputComponent)
+	if (m_InputComponent)
 	{
 		// Bind input actions
-		InputComponent->BindAction("Grab", EInputEvent::IE_Pressed, this, &UGrabber::Grab);
-		InputComponent->BindAction("Grab", EInputEvent::IE_Released, this, &UGrabber::Release);
+		m_InputComponent->BindAction("Grab", EInputEvent::IE_Pressed, this, &UGrabber::Grab);
+		m_InputComponent->BindAction("Grab", EInputEvent::IE_Released, this, &UGrabber::Release);
 	}
 	else
 	{
@@ -68,20 +77,54 @@ void UGrabber::Grab()
 	AActor* ActorHit =  HitResult.GetActor();
 
 	// If we hit something then attach a physics handle
-	if (ActorHit && PhysicsHandleComponent && ComponentToGrab)
+	if (ActorHit && m_PhysicsHandleComponent && ComponentToGrab)
 	{
-		PhysicsHandleComponent->GrabComponent(ComponentToGrab,
+		m_PhysicsHandleComponent->GrabComponent(ComponentToGrab,
 											  NAME_None,
 											  ComponentToGrab->GetOwner()->GetActorLocation(),
 											  true); //allow rotation
+
+		// Play the grab sound
+		if (m_GrabAudioComponent)
+		{
+			m_GrabAudioComponent->Play();
+		}
 	}
 }
 
 void UGrabber::Release()
 {
-	if (PhysicsHandleComponent)
+	if (m_PhysicsHandleComponent)
 	{
-		PhysicsHandleComponent->ReleaseComponent();
+		m_PhysicsHandleComponent->ReleaseComponent();
+	}
+}
+
+void UGrabber::SetupGrabSound()
+{
+	// Load our Sound Cue for the grab object sound we created in the editor... 
+	static ConstructorHelpers::FObjectFinder<USoundCue> GrabCue(
+		TEXT("/Game/GrabObject_SoundCue")
+	);
+
+	// Store a reference to the Cue asset - we'll need it later.
+	USoundCue* GrabAudioCue = GrabCue.Object;
+
+	// Create an audio component, the audio component wraps the Cue, 
+	// and allows us to ineract with it, and its parameters from code.
+	m_GrabAudioComponent = CreateDefaultSubobject<UAudioComponent>(
+		TEXT("PropellerAudioComp")
+		);
+
+	if (m_GrabAudioComponent)
+	{
+		// I don't want the sound playing the moment it's created.
+		m_GrabAudioComponent->bAutoActivate = false;
+
+		// Attach our sound cue to the SoundComponent
+		if (GrabAudioCue && m_GrabAudioComponent->IsValidLowLevelFast()) {
+			m_GrabAudioComponent->SetSound(GrabAudioCue);
+		}
 	}
 }
 
@@ -93,10 +136,10 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 	ComputePlayerData();
 
 	// if yhe physics handle is attached
-	if (PhysicsHandleComponent && PhysicsHandleComponent->GetGrabbedComponent())
+	if (m_PhysicsHandleComponent && m_PhysicsHandleComponent->GetGrabbedComponent())
 	{
 		// move the object that we're holding
-		PhysicsHandleComponent->SetTargetLocation(PlayerData.LineTraceEnd);
+		m_PhysicsHandleComponent->SetTargetLocation(m_PlayerData.LineTraceEnd);
 	}
 
 }
@@ -133,8 +176,8 @@ FHitResult UGrabber::LineTraceObjectInReach()
 	/// Line-trace (AKA Ray-cast) out to reach distance
 	FHitResult LineTraceHit;
 	GetWorld()->LineTraceSingleByObjectType(OUT LineTraceHit,
-		PlayerData.ViewPointLocation,
-		PlayerData.LineTraceEnd,
+		m_PlayerData.ViewPointLocation,
+		m_PlayerData.LineTraceEnd,
 		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
 		QueryParams
 	);
@@ -143,7 +186,7 @@ FHitResult UGrabber::LineTraceObjectInReach()
 	AActor* HitActor = LineTraceHit.GetActor();
 	if (HitActor)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Hit Actor Name: %s!"), *(HitActor->GetName()));
+		UE_LOG(LogTemp, Warning, TEXT("Grabber of %s - Hit Actor Name: %s!"), *(GetOwner()->GetName()), *(HitActor->GetName()));
 	}
 
 	return LineTraceHit;
@@ -156,9 +199,9 @@ void UGrabber::ComputePlayerData()
 
 	/// Get player view point this tick
 	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
-		OUT PlayerData.ViewPointLocation,
-		OUT PlayerData.ViewPointRotation
+		OUT m_PlayerData.ViewPointLocation,
+		OUT m_PlayerData.ViewPointRotation
 	);
 
-	PlayerData.LineTraceEnd = PlayerData.ViewPointLocation + PlayerData.ViewPointRotation.Vector() * PlayerData.Reach;
+	m_PlayerData.LineTraceEnd = m_PlayerData.ViewPointLocation + m_PlayerData.ViewPointRotation.Vector() * m_PlayerData.Reach;
 }

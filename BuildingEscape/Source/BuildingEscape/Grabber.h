@@ -3,9 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
+#include "Components/ActorComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/AudioComponent.h"
 #include "Grabber.generated.h"
 
 
@@ -27,10 +28,9 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
-
-	UPhysicsHandleComponent* PhysicsHandleComponent = nullptr;
-
-	UInputComponent* InputComponent = nullptr;
+	UPhysicsHandleComponent* m_PhysicsHandleComponent = nullptr;
+	UInputComponent* m_InputComponent = nullptr;
+	UAudioComponent* m_GrabAudioComponent = nullptr;
 
 	struct PlayerData
 	{
@@ -39,7 +39,7 @@ private:
 		FVector LineTraceEnd;
 		// how far does the player reach for grabbable objects
 		float Reach = 200.0f;
-	} PlayerData;
+	} m_PlayerData;
 
 	// Find (assumed) attached physics handle component
 	void FindPhysicsHandleComponent();
@@ -59,4 +59,6 @@ private:
 	FHitResult LineTraceObjectInReach();
 
 	void ComputePlayerData();
+
+	void SetupGrabSound();
 };
