@@ -1,0 +1,33 @@
+### CONCEPT ###
+
+* Escape the room
+
+* You awaken in a locked room, unable to escape
+
+* Use environmental cluse such as light and sound to determine what to do next
+
+* Trigger pressure plates and solve puzzles to progress towards the exit
+
+
+### RULES ###
+
+* No lose condition, apart from the feelinf you're going to die in this room if you don't get out!
+
+* Anything you can do, you're allowed to do
+
+* YOu win by exiting the room
+
+### REQUIREMENTS ###
+
+* Unreal's  provided Starter Content pack
+(all the things we need for our game: walls, doors, tables, chairs, lights, etc.)
+
+* Write C++ code & Blueprints as it fits the situation
+
+* Various ounds effects to enhance the atmosphere
+
+* Sketches for layout of room(s)
+
+* Sketches for how puzzels work
+
+
